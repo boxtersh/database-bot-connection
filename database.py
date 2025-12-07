@@ -1,14 +1,15 @@
 import asyncio
 import aiomysql
 import dict_query as DQ
+import token_file as tk
 
 class DataBase:
     def __init__(self):
-        self.host = '109.206.169.221'
-        self.user = 'seschool_01'
-        self.password = 'seschool_01'
-        self.database = 'seschool_01_RP12_TYA'
-        self.port = 3306
+        self.host = tk.token()[0]
+        self.user = tk.token()[1]
+        self.password = tk.token()[2]
+        self.database = tk.token()[3]
+        self.port = tk.token()[4]
         self.dict_query = DQ.get_dict_query()
 
     def connection_close(self):
