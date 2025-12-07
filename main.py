@@ -5,6 +5,7 @@ from datetime import date
 import token_file as tk
 from database import DataBase as DB
 from logic import logic_add_habits, Habit
+from dict_query import get_dict_query
 
 
 bot = aiogram.Bot(token=tk.token())
@@ -14,29 +15,12 @@ db = DB()
 @dp.message(filters.Command('start'))
 async def start(message: types.Message):
     user_name = message.from_user.username
-    await message.reply(f'Приветствую Вас {user_name} 👋, я ваш персональный помощник по созданию привычек, и '
-                        f'ведению статистики их выполнения.\nС командами выполнения можете ознакомиться набрав '
-                        f'команду /help')
+    await message.reply(get_dict_query()['Приветствие'])
 
 
 @dp.message(filters.Command('help'))
 async def start(message: types.Message):
-    await message.reply(f'Список моих доступных команд:\n'
-                        f'/start - приветствие, с описанием чат бота;\n'
-                        f'/help - список доступных команд;\n'
-                        f'/add_habits - добавить привычку, формат:\n'
-                        f'/add_habit пить воду | ежедневно;\n'
-                        f'/list_habits - посмотреть перечень всех привычек;\n'
-                        f'/check 12 - Отметить выполнение сегодня, или\n'
-                        f'за указанную дату с комментарием:\n/check 12 2025-12-03 | Выпил 2 л'
-                        f'/uncheck - удалить отметку, формат:\n'
-                        f'/uncheck 12 2025-12-02;\n'
-                        f'/edit_habit - Редактировать привычку, формат:\n'
-                        f'/edit_habit 12 Пить воду — немного меньше | еженедельно\n'
-                        f'/get_habit - Получить детали привычки, формат:\n'
-                        f'/get_habit 12;\n'
-                        f'/delete_habit - удаление привычки, формат:\n'
-                        f'/delete_habit 12')
+    await message.reply(get_dict_query()['Команды'])
 
 
 @dp.message(filters.Command('add_habits'))
@@ -71,7 +55,7 @@ async def list_habits(message: types.Message, command: filters.CommandObject):
 async def main():
     await dp.start_polling(bot)
     await db.creating_tables()
-
+    print('запуск')
 
 if __name__ == '__main__':
     asyncio.run(main())
