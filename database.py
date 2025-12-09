@@ -100,11 +100,11 @@ class DataBase:
             self.connection_close()
             return res[2], res[3]
 
-    async def edit_habit(self, id, user_id, name, frequency):
+    async def edit_habit(self, name, frequency, created_at, id):
         self.connection = await self.create_connection()
         async with self.connection.cursor() as cursor:
             query = self.dict_query['Редактировать привычку']
-            await cursor.execute(query, [name, frequency, id, user_id])
+            await cursor.execute(query, [name, frequency, created_at, id])
             self.connection_close()
 
     async def get_habit(self, id):

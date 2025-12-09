@@ -91,7 +91,21 @@ async def uncheck(message: types.Message, command: filters.CommandObject):
 # Редактировать привычку
 @dp.message(filters.Command('edit_habit'))
 async def edit_habit(message: types.Message, command: filters.CommandObject):
-    ...
+    user_id = message.from_user.id
+    tuple_ = await db.list_id_habits(user_id)
+    all_id_habits = {elm for tup in tuple_ for elm in tup}
+    res = validate_parameters(command.args, all_id_habits)
+    if res is None:
+        id = command.args.split(' ', 1)[0].strip()
+        res = f'{res}\n{id}\n{all_id_habits}'                                                  # Дополнить
+
+    await message.reply(f'{res}')
+    # if res is None:
+    #     created_at = date.today()
+    #     await db.add_habits(user_id, name, frequency, created_at)
+    #     res = (f'Прекрасно, ваша привычка:\n{Habit(name=name, frequency=frequency, created_at=created_at)}'
+    #            f'\nуспешно изменена 👍')
+    # await message.reply(res)
 
 #Получить детали привычки
 @dp.message(filters.Command('get_habit'))
@@ -100,11 +114,18 @@ async def get_habit(message: types.Message, command: filters.CommandObject):
     tuple_ = await db.list_id_habits(user_id)
     all_id_habits = {elm for tup in tuple_ for elm in tup}
     res = validate_parameters(command.args, all_id_habits)
-    id = command.args.split(' ', 1)[0].strip()
     if res is None:
+        id = command.args.split(' ', 1)[0].strip()
         tuple_one = await db.get_habit(id)
         res = (f'Ваша привычка:\n{Habit(name=tuple_one[2], frequency=tuple_one[3], created_at=tuple_one[4])}')
     await message.reply(f'{res}')
+
+
+@dp.message(F.text)
+async def pay_for_delivery_with_card(message: types.Message):
+    await message.reply(f'Вы ввели команду:\n{message.text}\nданная команда мне не известна⁉️ 🤔\n\n'
+                        f'Список доступных команд:\n/help\n\n'
+                        f'попробуйте ещё раз ✍️, у вас обязательно получится 👇')
 
 
 async def main():
