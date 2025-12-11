@@ -1,4 +1,6 @@
-from datetime import datetime, date
+from datetime import date, datetime
+from difflib import restore
+
 
 class Habit:
     def __init__(self, name: str, frequency: str, created_at: date):
@@ -57,18 +59,57 @@ def logic_add_habits(data: str):
     return res, name, frequency
 
 
-def validate_parameters(command_args, all_id_habits):
-    res = None
+def get_line_habits(tuples: tuple):
+    lst = ['Ваши привычки 👇:\n']
+    gen_res = ((tuple_[2], tuple_[3], tuple_[4]) for tuple_ in tuples)
+    for name, frequency, created_at in gen_res:
+        str_habits = f'{Habit(name=name, frequency=frequency, created_at=created_at)}'
+        lst.append(str_habits)
+    return '\n'.join(lst)
+
+
+def all_id_habits(tuples: tuple):
+    return {elm for tuple_ in tuples for elm in tuple_}
+
+
+def validate_parameters(command_args: str, all_id_habits: set):
     if not command_args:
-        res = f'Вы не передали ни единого параметра для отметки привычки, повторите ввод'
-    elif all_id_habits == set():
-        res = f'У вас нет ни одной привычки'
-    elif not (id_split:=command_args.split(' ', 1)[0].strip()).isdigit():
-        res = f'Вы передали id = {id_split}, что не допустимо, id должно быть положительное целое число. Повторите ввод'
-    elif id_split.isdigit():
-        if int(id_split) not in all_id_habits:
-            res = f'У вас нет привычки c id = {id_split}'
-    return res
+        return f'Вы не передали ни единого параметра для отметки привычки, повторите ввод'
+    if all_id_habits == set():
+        return f'У вас нет ни одной привычки'
+    id = command_args.split(' ', 1)[0].strip()
+    if not id.isdigit():
+        return f'Вы передали id = {id}, что не допустимо, id должно быть положительное целое число. Повторите ввод'
+    if int(id) not in all_id_habits:
+        return f'У вас нет привычки c id = {id}'
+
+
+def attribute_is_date(str_: str):
+    res = None
+    date_ = None
+    len_str_ = len (str_.split(' ', 1))
+    if len_str_ != 2:
+        res = f'Вы не передали параметр дата в формате, пример 2013-05-19'
+        return res, date_
+    if len_str_ == 2:
+        date_ = str_.split(' ', 1)[1].strip()
+        try:
+            datetime.strptime(date_, '%Y-%m-%d')
+        except ValueError:
+            res = f'Вы передали параметр даты, но такой даты: {date_} не существует,\nТребуемый формат: 2013-05-19.\nПовторите ввод'
+            date_ = None
+        return res, date_
+
+
+def logic_uncheck(command_args: str, tuples: tuple):
+    id = None
+    date_ = None
+    res = validate_parameters(command_args, all_id_habits(tuples))
+    if res is None:
+        id = command_args.split(' ', 1)[0]
+        res, date_ = attribute_is_date(command_args)
+    return res, id, date_
+
 
 
 def logic_check(command_args: str):
@@ -88,16 +129,12 @@ def logic_check(command_args: str):
         if not date_split:
             date_ = str(date.today())
         else:
-            date_lst = [elem for elem in date_split.split('-')]
-            if len(date_lst) == 3 and all(elem.strip().isdigit() for elem in date_lst):
-                date_lst = [int(elem.strip()) for elem in date_split.split('-')]
-                date_object = date(date_lst[0], date_lst[1], date_lst[2])
-                res = f'Указан неверный формат даты, пример допустимой даты: 2013-01-13. Повторите ввод'
-                if isinstance(date_object, date):
-                    date_ = str(date_object)
-                    res = None
-            else:
-                res = f'Дата пропущена или указан неверный формат даты, пример допустимой даты: 2013-01-13. Повторите ввод'
+            try:
+                datetime.strptime(date_split, '%Y-%m-%d')
+                date_ = date_split
+                res = None
+            except ValueError:
+                res = f'Вы передали параметр даты, но такой даты: {date_split} не существует,\nТребуемый формат: 2013-05-19.\nПовторите ввод'
 
     if len_atrib == 1:
         note = 'Null'

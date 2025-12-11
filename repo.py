@@ -1,15 +1,15 @@
-import asyncio
 import aiomysql
-import dict_query as DQ
-import token_file as tk
+import dictionary_queries_and_inform as DQ
+from config import get_connection_parameters as field
 
-class DataBase:
+
+class Repo:
     def __init__(self):
-        self.host = tk.get_connect()[0]
-        self.user = tk.get_connect()[1]
-        self.password = tk.get_connect()[2]
-        self.database = tk.get_connect()[3]
-        self.port = tk.get_connect()[4]
+        self.host = field()[0]
+        self.user = field()[1]
+        self.password = field()[2]
+        self.database = field()[3]
+        self.port = field()[4]
         self.dict_query = DQ.get_dict_query()
 
     def connection_close(self):
@@ -43,7 +43,6 @@ class DataBase:
         except Exception as e:
             print(f'ошибка 2{e}')
 
-
     async def add_habits(self, user_id, name, frequency, created_at):
         self.connection = await self.create_connection()
         async with self.connection.cursor() as cursor:
@@ -54,7 +53,7 @@ class DataBase:
     async def list_habits(self, user_id):
         self.connection = await self.create_connection()
         async with self.connection.cursor() as cursor:
-            query = self.dict_query['Лист привычек']
+            query = self.dict_query['Список привычек']
             await cursor.execute(query, [user_id])
             res = await cursor.fetchall()
             self.connection_close()
@@ -63,12 +62,11 @@ class DataBase:
     async def list_id_habits(self, user_id):
         self.connection = await self.create_connection()
         async with self.connection.cursor() as cursor:
-            query = self.dict_query['Лист id привычек']
+            query = self.dict_query['Список id привычек']
             await cursor.execute(query, [user_id])
             res = await cursor.fetchall()
             self.connection_close()
             return res
-
 
     async def check (self, habits_id, check_date, note):
         self.connection = await self.create_connection()
@@ -84,11 +82,11 @@ class DataBase:
             await cursor.execute(query,[id])
         self.connection_close()
 
-    async def uncheck(self, user_id, habits_id, check_date):
+    async def uncheck(self, habits_id, check_date):
         self.connection = await self.create_connection()
         async with self.connection.cursor() as cursor:
             query = self.dict_query['Удалить отметку']
-            await cursor.execute(query, [user_id, habits_id, check_date])
+            await cursor.execute(query, [habits_id, check_date])
         self.connection_close()
 
     async def get_data_for_edit_habit(self, id, user_id):
@@ -115,16 +113,9 @@ class DataBase:
             res = await cursor.fetchone()
             self.connection_close()
             return res
-
+# ❌
     async def stats(self, id, user_id):
         res = await self.get_habit(id)
 
 
-# async def main():
-#     db = DataBase()
-#     print(await db.get_habit(11))
-#
-#
-#
-# if __name__ == '__main__':
-#     asyncio.run(main())
+DB = Repo()
