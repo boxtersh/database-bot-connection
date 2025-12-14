@@ -82,6 +82,24 @@ class Repo:
             await cursor.execute(query,[id])
         self.connection_close()
 
+    async def get_all_date_from_habit_checks(self, habits_id) -> set:
+        self.connection = await self.create_connection()
+        async with (self.connection.cursor() as cursor):
+            query = self.dict_query['Все даты отметок']
+            await cursor.execute(query, [habits_id])
+            tuples = await cursor.fetchall()
+        self.connection_close()
+        return tuples
+
+    async def get_period_date_from_habit_checks(self, habits_id, beginning, end) -> set:
+        self.connection = await self.create_connection()
+        async with (self.connection.cursor() as cursor):
+            query = self.dict_query['Период дат отметок']
+            await cursor.execute(query, [habits_id, beginning, end])
+            tuples = await cursor.fetchall()
+        self.connection_close()
+        return tuples
+
     async def uncheck(self, habits_id, check_date):
         self.connection = await self.create_connection()
         async with self.connection.cursor() as cursor:
@@ -98,11 +116,11 @@ class Repo:
             self.connection_close()
             return res[2], res[3]
 
-    async def edit_habit(self, name, frequency, created_at, id):
+    async def edit_habit(self, name, frequency, id):
         self.connection = await self.create_connection()
         async with self.connection.cursor() as cursor:
             query = self.dict_query['Редактировать привычку']
-            await cursor.execute(query, [name, frequency, created_at, id])
+            await cursor.execute(query, [name, frequency, id])
             self.connection_close()
 
     async def get_habit(self, id):
@@ -113,6 +131,16 @@ class Repo:
             res = await cursor.fetchone()
             self.connection_close()
             return res
+
+    async def get_checks(self, id):
+        self.connection = await self.create_connection()
+        async with self.connection.cursor() as cursor:
+            query = self.dict_query['Отметка']
+            await cursor.execute(query, [id])
+            res = await cursor.fetchone()
+            self.connection_close()
+            return res
+
 # ❌
     async def stats(self, id, user_id):
         res = await self.get_habit(id)

@@ -1,33 +1,10 @@
-from datetime import date, datetime
-from difflib import restore
+from datetime import date, datetime, timedelta
+from time import strptime
+
+from model import *
+from dictionary_queries_and_inform import get_dict_info_for_user
 
 
-class Habit:
-    def __init__(self, name: str, frequency: str, created_at: date):
-        self.name = name
-        self.frequency = frequency
-        self.created_at = created_at
-
-    def __str__(self) -> str:
-        return (
-            f'- Название привычки: {self.name}\n'
-            f'- Частота использования: {self.frequency}\n'
-            f'- Дата создания: {str(self.created_at)}\n'
-        )
-
-
-class HabitChecks:
-    def __init__(self, habits_id: int, check_date: date, note: str):
-        self.habits_id = habits_id
-        self.check_date = check_date
-        self.note = note
-
-    def __str__(self) -> str:
-        return (
-            f'- id привычки: {self.habits_id}\n'
-            f'- Дата отметки: {self.check_date}\n'
-            f'- Комментарий: {str(self.note)}\n'
-        )
 
 
 def logic_add_habits(data: str):
@@ -36,20 +13,12 @@ def logic_add_habits(data: str):
     name = None
     frequency = None
     if not data:
-        res = f'''Вы не передали параметры частоты привычки в команду /add_habits!
-Правильный формат: /add_habits пить воду | X, где Х не указано, либо одно значение из перечня:
-ежедневно, еженедельно, ежемесячно, ежегодно, произвольно.
-Для не указанного значения частота привычки будет  - произвольно.
-Повторите ввод команды'''
+        res = get_dict_info_for_user()['Нет частоты']
     elif len(data.split('|')) == 1:
         name = data.split('|')[0].strip()
         frequency = 'произвольно'
     elif len(data.split('|')) == 2 and data.split('|')[1].strip() not in freq and data.split('|')[1].strip() != '':
-        res = f'''Вы передали неверный параметр частоты привычки в команду /add_habits!
-Правильный формат: /add_habits пить воду | X, где Х не указано, либо одно значение из перечня:
-ежедневно, еженедельно, ежемесячно, ежегодно, произвольно.
-Для не указанного значения частота привычки будет  - произвольно.
-Повторите ввод команды'''
+        res = get_dict_info_for_user()['Неверная частота']
     elif len(data.split('|')) == 2 and data.split('|')[1].strip() not in freq and data.split('|')[1].strip() == '':
         name = data.split('|')[0].strip()
         frequency = 'произвольно'
@@ -74,14 +43,39 @@ def all_id_habits(tuples: tuple):
 
 def validate_parameters(command_args: str, all_id_habits: set):
     if not command_args:
-        return f'Вы не передали ни единого параметра для отметки привычки, повторите ввод'
+        return get_dict_info_for_user()['Нет параметров']
     if all_id_habits == set():
-        return f'У вас нет ни одной привычки'
+        return get_dict_info_for_user()['Нет привычек']
     id = command_args.split(' ', 1)[0].strip()
     if not id.isdigit():
-        return f'Вы передали id = {id}, что не допустимо, id должно быть положительное целое число. Повторите ввод'
+        return get_dict_info_for_user()['Неверный id'].format(id)
     if int(id) not in all_id_habits:
         return f'У вас нет привычки c id = {id}'
+
+
+def validate_name_frequency(command_args: str):
+    name = None
+    frequency = None
+    res = None
+    freq = {'ежедневно', 'еженедельно', 'ежемесячно', 'ежегодно', 'произвольно'}
+    split_command_args = command_args.split('|',1)
+    if len(split_command_args[0].split(' ', 1)) == 1:
+        res = get_dict_info_for_user()['Нет имени привычки']
+    elif split_command_args[0].split(' ', 1)[1].strip() == '':
+        res = get_dict_info_for_user()['Нет имени привычки']
+    elif len(split_command_args) == 1:
+        name = split_command_args[0].split(' ', 1)[1].strip()
+        frequency = 'произвольно'
+    elif len(split_command_args) == 2:
+        if split_command_args[1].strip() not in freq and split_command_args[1].strip() == '':
+            name = split_command_args[0].split(' ', 1)[1].strip()
+            frequency = 'произвольно'
+        elif split_command_args[1].strip() in freq and split_command_args[1].strip() != '':
+            name = split_command_args[0].split(' ', 1)[1].strip()
+            frequency = split_command_args[1].strip()
+        else:
+            res = get_dict_info_for_user()['Неверная частота ред']
+    return res, name, frequency
 
 
 def attribute_is_date(str_: str):
@@ -89,14 +83,14 @@ def attribute_is_date(str_: str):
     date_ = None
     len_str_ = len (str_.split(' ', 1))
     if len_str_ != 2:
-        res = f'Вы не передали параметр дата в формате, пример 2013-05-19'
+        res = f'Вы не передали параметр дата в формате: 2013-05-19'
         return res, date_
     if len_str_ == 2:
-        date_ = str_.split(' ', 1)[1].strip()
+        date_ = str_.split(' ', 1)[1].strip()[0:10]
         try:
             datetime.strptime(date_, '%Y-%m-%d')
         except ValueError:
-            res = f'Вы передали параметр даты, но такой даты: {date_} не существует,\nТребуемый формат: 2013-05-19.\nПовторите ввод'
+            res = get_dict_info_for_user()['Неверная дата'].format(date_=date_)
             date_ = None
         return res, date_
 
@@ -109,7 +103,6 @@ def logic_uncheck(command_args: str, tuples: tuple):
         id = command_args.split(' ', 1)[0]
         res, date_ = attribute_is_date(command_args)
     return res, id, date_
-
 
 
 def logic_check(command_args: str):
@@ -149,3 +142,52 @@ def logic_check(command_args: str):
         res = f'Неверный формат id, число должно быть целым и положительным. Повторите ввод'
 
     return res, id, date_, note
+
+
+def get_id_habits(command_args):
+    return int(command_args.split(' ', 1)[0].strip())
+
+
+def set_tuples_data(tuples_data):
+    return {str(elm) for tuple_ in tuples_data for elm in tuple_}
+
+
+def argument_in_set_7_30(command_args):
+    period = {'7', '30'}
+    split_args = command_args.split(' ', 1)
+    if len(split_args) == 2 and split_args[1].strip().isdecimal() and split_args[1].strip() in period:
+        return None, split_args[1].strip()
+    res = f'Аргумент статистики 7 или 30 дней не задан\nтребуется формат:\n/stats 12 Х, где Х число 7 или 30\nПовторите ввод'
+    return res, None
+
+
+def get_begin_end_period(period, habit_object):
+    end = date.today()
+    begin = end - timedelta(days=period)
+    if habit_object[4] > begin:
+        begin = habit_object[4]
+    return begin, end
+
+
+def logic_stats(tuples_, habit_object, begin, end):
+    habit = Habit(name=habit_object[2], frequency=habit_object[3], created_at=habit_object[4])
+    frequency = habit_object[3]
+    count_checks = len(tuples_)
+    days_ = (end - begin).days
+    res = None
+    match frequency:
+        case 'ежедневно':
+            marked  = round(count_checks * 100 / days_,2)
+            res = f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%'
+        case 'еженедельно':
+            marked  = round(count_checks * (days_/7) * 100 / (days_),2)
+            res = f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%'
+        case 'ежемесячно':
+            marked  = round(count_checks * (days_/30) * 100 / days_, 2)
+            res = f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%'
+        case 'ежегодно':
+            marked = round(count_checks * (days_/365) * 100 / days_, 2)
+            res = f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%'
+        case 'произвольно':
+            res = f'Для данного периода расчет не производится'
+    return res
