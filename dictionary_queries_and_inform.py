@@ -46,7 +46,6 @@ def get_dict_query():
                                        ' AND check_date BETWEEN %s AND %s;',
                   'Редактировать привычку':'UPDATE habits SET name = %s, frequency = %s WHERE id = %s;',
                   'Привычки пользователя':'SELECT id FROM habits WHERE user_id = %s',
-
                   }
     return dict_query
 

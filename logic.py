@@ -1,10 +1,7 @@
-from datetime import date, datetime, timedelta
-from time import strptime
+from datetime import datetime, timedelta
 
 from model import *
 from dictionary_queries_and_inform import get_dict_info_for_user
-
-
 
 
 def logic_add_habits(data: str):
@@ -175,19 +172,27 @@ def logic_stats(tuples_, habit_object, begin, end):
     count_checks = len(tuples_)
     days_ = (end - begin).days
     res = None
+    date_str = ''
     match frequency:
         case 'ежедневно':
             marked  = round(count_checks * 100 / days_,2)
-            res = f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%'
+            res = (f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%\n\n'
+                   f'Даты отметок:\n{date_str}')
         case 'еженедельно':
-            marked  = round(count_checks * (days_/7) * 100 / (days_),2)
-            res = f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%'
+            marked  = round(count_checks * 7 * 100 / (days_),2)
+            res = (f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%\n\n'
+                   f'Даты отметок:\n{date_str}')
         case 'ежемесячно':
-            marked  = round(count_checks * (days_/30) * 100 / days_, 2)
-            res = f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%'
+            marked  = round(count_checks * 30 * 100 / days_, 2)
+            res = (f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%\n\n'
+                   f'Даты отметок:\n{date_str}')
         case 'ежегодно':
-            marked = round(count_checks * (days_/365) * 100 / days_, 2)
-            res = f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%'
+            marked = round(count_checks * 365 * 100 / days_, 2)
+            res = (f'Статистика для привычки:\n{habit} за {days_} дней:\n-выполнено {marked}%\n\n'
+                   f'Даты отметок:\n{date_str}')
         case 'произвольно':
-            res = f'Для данного периода расчет не производится'
+            res = f'Для данного периода расчет не производится\n'
+    iter_date_str = map(lambda date_: str(date_[0]), tuples_)
+    date_str = (', ').join(iter_date_str)
+    res = res + date_str
     return res

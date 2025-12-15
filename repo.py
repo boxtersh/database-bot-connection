@@ -36,12 +36,12 @@ class Repo:
                     for query in sql_generator:
                         if query:
                             await cursor.execute(query)
-            except Exception as e:
-                print(f'ошибка 1{e}')
+            except Exception as err:
+                print(f'Ошибка создания таблицы 1{err}')
 
             self.connection_close()
-        except Exception as e:
-            print(f'ошибка 2{e}')
+        except Exception as err:
+            print(f'Ошибка связи 2{err}')
 
     async def add_habits(self, user_id, name, frequency, created_at):
         self.connection = await self.create_connection()
@@ -140,10 +140,6 @@ class Repo:
             res = await cursor.fetchone()
             self.connection_close()
             return res
-
-# ❌
-    async def stats(self, id, user_id):
-        res = await self.get_habit(id)
 
 
 DB = Repo()
