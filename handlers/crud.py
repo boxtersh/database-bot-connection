@@ -1,10 +1,7 @@
 from aiogram import filters, types, Router
-from datetime import date, datetime
-import asyncio
 from repo import DB
-from logic import Habit
+from dictionary_queries_and_inform import get_dict_info_for_user
 from logic import *
-
 
 router = Router()
 

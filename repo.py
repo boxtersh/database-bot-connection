@@ -1,5 +1,5 @@
 import aiomysql
-import dictionary_queries_and_inform as DQ
+from dictionary_queries_and_inform import get_dict_query
 from config import get_connection_parameters as field
 
 
@@ -10,7 +10,7 @@ class Repo:
         self.password = field()[2]
         self.database = field()[3]
         self.port = field()[4]
-        self.dict_query = DQ.get_dict_query()
+        self.dict_query = get_dict_query()
 
     def connection_close(self):
         if self.connection:
