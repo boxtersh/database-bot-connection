@@ -1,15 +1,16 @@
 import aiomysql
 from dictionary_queries_and_inform import get_dict_query
-from config import get_connection_parameters as field
+from config import get_connection_parameters
 
+connection = get_connection_parameters()
 
 class Repo:
     def __init__(self):
-        self.host = field()[0]
-        self.user = field()[1]
-        self.password = field()[2]
-        self.database = field()[3]
-        self.port = field()[4]
+        self.host = connection['host']
+        self.user = connection['user']
+        self.password = connection['password']
+        self.database = connection['database']
+        self.port = connection['port']
         self.dict_query = get_dict_query()
 
     def connection_close(self):
