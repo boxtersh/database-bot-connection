@@ -1,7 +1,8 @@
 from aiogram import filters, types, Router
+from datetime import date
 from repo import DB
 from dictionary_queries_and_inform import get_dict_info_for_user
-from logic import *
+import logic
 
 router = Router()
 
@@ -10,11 +11,11 @@ router = Router()
 async def add_habits(message: types.Message, command: filters.CommandObject):
     habit = None
     user_id = message.from_user.id
-    res, name, frequency = logic_add_habits(command.args)
+    res, name, frequency = logic.logic_add_habits(command.args)
     if res is None:
         created_at = date.today()
         await DB.add_habits(user_id, name, frequency, created_at)
-        habit = Habit(name=name, frequency=frequency, created_at=created_at)
+        habit = logic.Habit(name=name, frequency=frequency, created_at=created_at)
         res = get_dict_info_for_user()['Привычка добавлена']
     await message.reply(res.format(habit=habit))
 
@@ -25,7 +26,7 @@ async def list_habits(message: types.Message, command: filters.CommandObject):
     username = message.from_user.username
     res = await DB.list_habits(user_id)
     if res:
-        res = get_line_habits(res)
+        res = logic.get_line_habits(res)
     else:
         res = get_dict_info_for_user()['Нет привычек'].format(username=username)
     await message.reply(res)
@@ -35,14 +36,14 @@ async def list_habits(message: types.Message, command: filters.CommandObject):
 async def list_habits(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
     tuples = await DB.list_id_habits(user_id)
-    res = validate_parameters(command.args, all_id_habits(tuples))
+    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
     if res is not None:
         await message.reply(res)
         return
-    res, habits_id, check_date, note = logic_check(command.args)
+    res, habits_id, check_date, note = logic.logic_check(command.args)
     if res is None:
         await DB.check(habits_id, check_date, note)
-        habit = HabitChecks(habits_id=habits_id, check_date=check_date, note=note)
+        habit = logic.HabitChecks(habits_id=habits_id, check_date=check_date, note=note)
         res = get_dict_info_for_user()['Отметка добавлена'].format(habit=habit)
     await message.reply(res)
 
@@ -53,11 +54,11 @@ async def delete_habit(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
     id = command.args
     tuples = await DB.list_id_habits(user_id)
-    res = validate_parameters(command.args, all_id_habits(tuples))
+    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
     if res is None:
         tuple_one = await DB.get_habit(id)
         await DB.delete_habit(id)
-        habit = Habit(name=tuple_one[2], frequency=tuple_one[3], created_at=tuple_one[4])
+        habit = logic.Habit(name=tuple_one[2], frequency=tuple_one[3], created_at=tuple_one[4])
         res = get_dict_info_for_user()['Привычка удалена'].format(habit=habit)
     await message.reply(res)
 
@@ -67,10 +68,10 @@ async def delete_habit(message: types.Message, command: filters.CommandObject):
 async def uncheck(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
     tuples = await DB.list_id_habits(user_id)
-    res, id, date_ = logic_uncheck(command.args, tuples)
+    res, id, date_ = logic.logic_uncheck(command.args, tuples)
     if res is None:
         tuples_data = await DB.get_all_date_from_habit_checks(id)
-        set_date = set_tuples_data(tuples_data)
+        set_date = logic.set_tuples_data(tuples_data)
         if set_date == set():
             res = get_dict_info_for_user()['Нет отметок'].format(id=id)
         elif date_ not in set_date:
@@ -87,13 +88,13 @@ async def uncheck(message: types.Message, command: filters.CommandObject):
 async def edit_habit(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
     tuples = await DB.list_id_habits(user_id)
-    res = validate_parameters(command.args, all_id_habits(tuples))
+    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
     if res is None:
-        res, name, frequency = validate_name_frequency(command.args)
+        res, name, frequency = logic.validate_name_frequency(command.args)
         if res is None:
-            id = get_id_habits(command.args)
+            id = logic.get_id_habits(command.args)
             tuple_ = await DB.get_habit(id)
-            it_was = f'{Habit(name=tuple_[2], frequency=tuple_[3], created_at=tuple_[4])}'
+            it_was = f'{logic.Habit(name=tuple_[2], frequency=tuple_[3], created_at=tuple_[4])}'
             it_became = (f'- Название привычки: {name}\n'
                          f'- Частота использования: {frequency}\n'
                          f'- Дата создания: {tuple_[4]}\n')
@@ -107,11 +108,11 @@ async def edit_habit(message: types.Message, command: filters.CommandObject):
 async def get_habit(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
     tuples = await DB.list_id_habits(user_id)
-    res = validate_parameters(command.args, all_id_habits(tuples))
+    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
     if res is None:
-        id = get_id_habits(command.args)
+        id = logic.get_id_habits(command.args)
         tuple_one = await DB.get_habit(id)
-        res = (f'Ваша привычка:\n{Habit(name=tuple_one[2], frequency=tuple_one[3], created_at=tuple_one[4])}')
+        res = (f'Ваша привычка:\n{logic.Habit(name=tuple_one[2], frequency=tuple_one[3], created_at=tuple_one[4])}')
     await message.reply(f'{res}')
 
 
@@ -120,15 +121,15 @@ async def get_habit(message: types.Message, command: filters.CommandObject):
 async def get_habit(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
     tuples = await DB.list_id_habits(user_id)
-    res = validate_parameters(command.args, all_id_habits(tuples))
+    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
     if res is None:
-        res, period = argument_in_set_7_30(command.args)
+        res, period = logic.argument_in_set_7_30(command.args)
         if res is None:
-            id = get_id_habits(command.args)
+            id = logic.get_id_habits(command.args)
             habit_object = await DB.get_habit(id)
-            begin, end = get_begin_end_period(int(period), habit_object)
+            begin, end = logic.get_begin_end_period(int(period), habit_object)
             tuples_ = await DB.get_period_date_from_habit_checks(id, begin, end)
-            res = logic_stats(tuples_, habit_object, begin, end)
+            res = logic.logic_stats(tuples_, habit_object, begin, end)
     await message.reply(res)
 
 
