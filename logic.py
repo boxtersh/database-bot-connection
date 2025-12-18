@@ -25,17 +25,17 @@ def logic_add_habits(data: str):
     return res, name, frequency
 
 
-def get_line_habits(tuples: tuple):
+def get_line_habits(list_dict_habits: list):
     lst = ['Ваши привычки 👇:\n']
-    gen_res = ((tuple_[2], tuple_[3], tuple_[4]) for tuple_ in tuples)
+    gen_res = ((dict_habits['name'], dict_habits['frequency'], dict_habits['created_at']) for dict_habits in list_dict_habits)
     for name, frequency, created_at in gen_res:
         str_habits = f'{Habit(name=name, frequency=frequency, created_at=created_at)}'
         lst.append(str_habits)
     return '\n'.join(lst)
 
 
-def all_id_habits(tuples: tuple):
-    return {elm for tuple_ in tuples for elm in tuple_}
+def all_id_habits(list_dict_id: list):
+    return {dict_id['id'] for dict_id in list_dict_id}
 
 
 def validate_parameters(command_args: str, all_id_habits: set):
@@ -92,10 +92,10 @@ def attribute_is_date(str_: str):
         return res, date_
 
 
-def logic_uncheck(command_args: str, tuples: tuple):
+def logic_uncheck(command_args: str, list_dict_id: list):
     id = None
     date_ = None
-    res = validate_parameters(command_args, all_id_habits(tuples))
+    res = validate_parameters(command_args, all_id_habits(list_dict_id))
     if res is None:
         id = command_args.split(' ', 1)[0]
         res, date_ = attribute_is_date(command_args)
@@ -145,8 +145,8 @@ def get_id_habits(command_args):
     return int(command_args.split(' ', 1)[0].strip())
 
 
-def set_tuples_data(tuples_data):
-    return {str(elm) for tuple_ in tuples_data for elm in tuple_}
+def set_tuples_data(list_dictdate):
+    return {str(dict_date['check_date']) for dict_date in list_dictdate}
 
 
 def argument_in_set_7_30(command_args):
@@ -158,18 +158,18 @@ def argument_in_set_7_30(command_args):
     return res, None
 
 
-def get_begin_end_period(period, habit_object):
+def get_begin_end_period(period, dict_habit):
     end = date.today()
     begin = end - timedelta(days=period)
-    if habit_object[4] > begin:
-        begin = habit_object[4]
+    if dict_habit['created_at'] > begin:
+        begin = dict_habit['created_at']
     return begin, end
 
 
-def logic_stats(tuples_, habit_object, begin, end):
-    habit = Habit(name=habit_object[2], frequency=habit_object[3], created_at=habit_object[4])
-    frequency = habit_object[3]
-    count_checks = len(tuples_)
+def logic_stats(list_dictdate, dict_habit, begin, end):
+    habit = Habit(name=dict_habit['name'], frequency=dict_habit['frequency'], created_at=dict_habit['created_at'])
+    frequency = dict_habit['frequency']
+    count_checks = len(list_dictdate)
     days_ = (end - begin).days
     res = None
     date_str = ''
@@ -192,7 +192,7 @@ def logic_stats(tuples_, habit_object, begin, end):
                    f'Даты отметок:\n{date_str}')
         case 'произвольно':
             res = f'Для данного периода расчет не производится\n'
-    iter_date_str = map(lambda date_: str(date_[0]), tuples_)
+    iter_date_str = map(lambda dict_date: str(dict_date['created_at']), list_dictdate)
     date_str = (', ').join(iter_date_str)
     res = res + date_str
     return res

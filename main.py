@@ -1,7 +1,7 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from config import token
-from handlers import special, crud, unknown_team
+from handlers import special, crud, unknown_command
 from repo import DB
 
 
@@ -11,7 +11,7 @@ async def main():
     dp.include_routers(
         special.router,
         crud.router,
-        unknown_team.router
+        unknown_command.router
     )
 
     await DB.creating_tables()

@@ -25,9 +25,9 @@ async def add_habits(message: types.Message, command: filters.CommandObject):
 async def list_habits(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
     username = message.from_user.username
-    res = await DB.list_habits(user_id)
-    if res:
-        res = logic.get_line_habits(res)
+    list_dict_habits = await DB.list_habits(user_id)
+    if list_dict_habits:
+        res = logic.get_line_habits(list_dict_habits)
     else:
         res = dict_info['Нет привычек'].format(username=username)
     await message.reply(res)
@@ -36,8 +36,8 @@ async def list_habits(message: types.Message, command: filters.CommandObject):
 @router.message(filters.Command('check'))
 async def list_habits(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
-    tuples = await DB.list_id_habits(user_id)
-    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
+    list_dict_id = await DB.list_id_habits(user_id)
+    res = logic.validate_parameters(command.args, logic.all_id_habits(list_dict_id))
     if res is not None:
         await message.reply(res)
         return
@@ -54,8 +54,8 @@ async def list_habits(message: types.Message, command: filters.CommandObject):
 async def delete_habit(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
     id = command.args
-    tuples = await DB.list_id_habits(user_id)
-    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
+    list_dict_id = await DB.list_id_habits(user_id)
+    res = logic.validate_parameters(command.args, logic.all_id_habits(list_dict_id))
     if res is None:
         tuple_one = await DB.get_habit(id)
         await DB.delete_habit(id)
@@ -68,11 +68,11 @@ async def delete_habit(message: types.Message, command: filters.CommandObject):
 @router.message(filters.Command('uncheck'))
 async def uncheck(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
-    tuples = await DB.list_id_habits(user_id)
-    res, id, date_ = logic.logic_uncheck(command.args, tuples)
+    list_dict_id = await DB.list_id_habits(user_id)
+    res, id, date_ = logic.logic_uncheck(command.args, list_dict_id)
     if res is None:
-        tuples_data = await DB.get_all_date_from_habit_checks(id)
-        set_date = logic.set_tuples_data(tuples_data)
+        list_dictdate = await DB.get_all_date_from_habit_checks(id)
+        set_date = logic.set_tuples_data(list_dictdate)
         if set_date == set():
             res = dict_info['Нет отметок'].format(id=id)
         elif date_ not in set_date:
@@ -88,8 +88,8 @@ async def uncheck(message: types.Message, command: filters.CommandObject):
 @router.message(filters.Command('edit_habit'))
 async def edit_habit(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
-    tuples = await DB.list_id_habits(user_id)
-    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
+    list_dict_id = await DB.list_id_habits(user_id)
+    res = logic.validate_parameters(command.args, logic.all_id_habits(list_dict_id))
     if res is None:
         res, name, frequency = logic.validate_name_frequency(command.args)
         if res is None:
@@ -108,8 +108,8 @@ async def edit_habit(message: types.Message, command: filters.CommandObject):
 @router.message(filters.Command('get_habit'))
 async def get_habit(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
-    tuples = await DB.list_id_habits(user_id)
-    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
+    list_dict_id = await DB.list_id_habits(user_id)
+    res = logic.validate_parameters(command.args, logic.all_id_habits(list_dict_id))
     if res is None:
         id = logic.get_id_habits(command.args)
         tuple_one = await DB.get_habit(id)
@@ -121,16 +121,16 @@ async def get_habit(message: types.Message, command: filters.CommandObject):
 @router.message(filters.Command('stats'))
 async def get_habit(message: types.Message, command: filters.CommandObject):
     user_id = message.from_user.id
-    tuples = await DB.list_id_habits(user_id)
-    res = logic.validate_parameters(command.args, logic.all_id_habits(tuples))
+    list_dict_id = await DB.list_id_habits(user_id)
+    res = logic.validate_parameters(command.args, logic.all_id_habits(list_dict_id))
     if res is None:
         res, period = logic.argument_in_set_7_30(command.args)
         if res is None:
             id = logic.get_id_habits(command.args)
-            habit_object = await DB.get_habit(id)
-            begin, end = logic.get_begin_end_period(int(period), habit_object)
-            tuples_ = await DB.get_period_date_from_habit_checks(id, begin, end)
-            res = logic.logic_stats(tuples_, habit_object, begin, end)
+            dict_habit = await DB.get_habit(id)
+            begin, end = logic.get_begin_end_period(int(period), dict_habit)
+            list_dictdate = await DB.get_period_date_from_habit_checks(id, begin, end)
+            res = logic.logic_stats(list_dictdate, dict_habit, begin, end)
     await message.reply(res)
 
 
